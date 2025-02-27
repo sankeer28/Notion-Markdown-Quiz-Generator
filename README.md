@@ -12,6 +12,7 @@ A browser-based tool that converts Notion markdown exports into interactive quiz
 - 🎲 Randomization of questions and answer choices
 - 📱 Responsive design for desktop and mobile use
 
+![image](https://github.com/user-attachments/assets/a10938f3-79d9-495a-b090-a6e5eb010128)
 
 ## How to Use
 
