@@ -672,8 +672,7 @@ Example format:
                         choicesBlock = choicesBlock.replace(codeBlockRegex, '');
                     }
 
-                    // IMPROVED CHOICE EXTRACTION: First get the entire text of all choice options
-                    // Parse the choices block line by line to properly identify bullet points
+                    // Parse the choices block line by line
                     const choiceLines = choicesBlock.split('\n');
                     
                     // Collect each complete choice with any multi-line text
@@ -709,37 +708,35 @@ Example format:
                     const choices = [];
                     let correctAnswer = null;
                     
-                    // Keep track of the original raw choices for debugging
+                    // DEBUG: Print all raw choices
                     console.log("Raw choices:", rawChoices);
                     
+                    // NEW IMPROVED DETECTION ALGORITHM
                     rawChoices.forEach((choice, index) => {
-                        // Store the original choice for debugging
-                        const originalChoice = choice;
-                        
-                        // Check for various markers of correct answers
+                        // Search for checkmark ANYWHERE in the option text
                         const hasCheckmark = choice.includes('✅');
-                        const hasBold = choice.includes('**');
-                        const explicitlyMarkedCorrect = choice.match(/correct/i) && !choice.match(/incorrect/i);
-
-                        // Clean the choice text (remove markers)
-                        choice = choice.replace(/✅/g, '').trim();
                         
-                        // Handle bold text - support various formats
-                        // Case 1: Entire option is bold: **Option text**
-                        // Case 2: Bold marker within text: Some **bold** text
-                        choice = choice.replace(/\*\*/g, '').trim();
+                        // Remove checkmark for display purposes
+                        let cleanedChoice = choice.replace(/✅/g, '').trim();
+                        
+                        // Also check for bold text (as fallback)
+                        const hasBold = choice.includes('**');
+                        
+                        // Clean up bold markers from text
+                        cleanedChoice = cleanedChoice.replace(/\*\*/g, '').trim();
                         
                         // Add cleaned choice to the array
-                        choices.push(choice);
+                        choices.push(cleanedChoice);
                         
-                        // Determine if this is the correct answer
-                        if (hasCheckmark || explicitlyMarkedCorrect) {
+                        // First priority: Checkmark
+                        if (hasCheckmark) {
+                            console.log(`Found checkmark in option ${index}: "${choice}"`);
                             correctAnswer = index;
-                            console.log(`Identified correct answer (${index}): ${originalChoice} -> ${choice}`);
-                        } else if (hasBold && correctAnswer === null) {
-                            // Only use bold as indicator if no checkmark has been found yet
+                        } 
+                        // Second priority: Bold (if no checkmark found yet)
+                        else if (hasBold && correctAnswer === null) {
+                            console.log(`Found bold in option ${index}: "${choice}"`);
                             correctAnswer = index;
-                            console.log(`Identified correct answer by bold (${index}): ${originalChoice} -> ${choice}`);
                         }
                     });
                     
@@ -749,9 +746,7 @@ Example format:
                         console.warn(`No correct answer marker found. Using first option as default for: ${questionText}`);
                     }
                     
-                    // Log the final choice selection for verification
-                    console.log(`Question: ${questionText}`);
-                    console.log(`Selected answer index ${correctAnswer}: ${choices[correctAnswer]}`);
+                    console.log(`Selected correct answer: ${correctAnswer}`);
                     
                     // Check if we have valid question with choices
                     if (questionText && choices.length > 0) {
@@ -772,8 +767,7 @@ Example format:
                             correctAnswer: correctAnswer,
                             category: (subCategory || mainCategory || 'Uncategorized'),
                             image: images.length > 0 ? images : null,
-                            code: code,
-                            originalChoices: rawChoices // Keep for debugging
+                            code: code
                         });
                     }
                 }
