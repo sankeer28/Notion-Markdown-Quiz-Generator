@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Markdown Quiz Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .left-panel {
+            flex: 1;
+            padding-right: 20px;
+            border-right: 1px solid #ddd;
+        }
+        
+        .right-panel {
+            flex: 2;
+        }
+        
+        #markdown-input {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-family: monospace;
+        }
+        
+        #file-upload {
+            display: none;
+        }
+        
+        #parse-btn, #start-quiz-btn {
+            padding: 10px 15px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        #parse-btn:disabled, #start-quiz-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #stats {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        #quiz-container {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        #question-text {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        #image-container img {
+            max-width: 100%;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+        }
+        
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .choice-btn {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            background-color: white;
+            color: black;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.2s;
+        }
+        
+        .choice-btn:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .choice-btn.selected {
+            background-color: #4285f4;
+            color: white;
+        }
+        
+        .choice-btn.correct {
+            background-color: #34a853;
+            color: white;
+        }
+        
+        .choice-btn.incorrect {
+            background-color: #ea4335;
+            color: white;
+        }
+        
+        #feedback {
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        #feedback.correct {
+            background-color: rgba(52, 168, 83, 0.2);
+            color: #34a853;
+        }
+        
+        #feedback.incorrect {
+            background-color: rgba(234, 67, 53, 0.2);
+            color: #ea4335;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #f1f1f1;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        #progress {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        
+        code {
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4285f4;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .category-filter {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .filter-btn {
+            padding: 5px 10px;
+            background-color: #f1f1f1;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+            margin-right: 5px;
+            position: relative;
+            padding-left: 30px; /* Space for checkbox */
+        }
+        
+        .filter-btn::before {
+            content: "";
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            border: 1px solid #999;
+            background-color: white;
+            border-radius: 3px;
+        }
+        
+        .filter-btn.active {
+            background-color: #4285f4;
+            color: white;
+        }
+        
+        .filter-btn.active::before {
+            content: "✓";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            background-color: #4285f4;
+            border-color: #4285f4;
+        }
+        
+        #start-over-btn {
+            background-color: #f44336;
+        }
+        
+        .sample-btn {
+            margin-right: 5px;
+            margin-bottom: 5px;
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        
+        .upload-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .upload-section.highlight {
+            border-color: #4285f4;
+            background-color: rgba(66, 133, 244, 0.1);
+        }
+        
+        #file-list {
+            margin: 15px 0;
+            padding: 0;
+            list-style-type: none;
+            text-align: left;
+        }
+        
+        #file-list li {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .file-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        .md-file {
+            color: #4285f4;
+        }
+        
+        .image-file {
+            color: #34a853;
+        }
+        
+        .delete-btn {
+            margin-left: auto;
+            padding: 2px 5px;
+            background-color: #ea4335;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Notion Markdown Quiz Generator</h1>
+    
+    <div class="container">
+        <div class="left-panel" id="input-section">
+            <h2>Step 1: Import Your Notion Export</h2>
+            <p>Upload your Notion export folder or markdown file with images:</p>
+            
+            <div class="upload-section" id="drop-zone">
+                <p>Drag & drop files here or</p>
+                <input type="file" id="file-upload" multiple>
+                <button id="browse-btn">Browse Files</button>
+                
+                <ul id="file-list"></ul>
+            </div>
+            
+            <textarea id="markdown-input" placeholder="# Paste your Markdown here
+            
+Example format:
+**Question text here?**
+- Option 1
+- Option 2
+- **Option 3** ✅
+- Option 4"></textarea>
+            
+            <button id="parse-btn">Parse Questions</button>
+            <div class="spinner" id="spinner"></div>
+            
+            <div id="stats">
+                <h3>Parsing Results:</h3>
+                <p>Questions found: <span id="question-count">0</span></p>
+                <ul id="categories-list"></ul>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div id="quiz-setup">
+                <h2>Step 2: Configure Your Quiz</h2>
+                <div id="category-filters" class="category-filter">
+                    <!-- Categories will be added here -->
+                </div>
+                <button id="start-quiz-btn" disabled>Start Quiz</button>
+            </div>
+            
+            <div id="quiz-container">
+                <div id="progress">Question <span id="current-question">1</span> of <span id="total-questions">0</span></div>
+                <div id="category-indicator" class="category-badge">Category: Unknown</div>
+                <div id="question-text">Loading question...</div>
+                <div id="image-container"></div>
+                <div id="code-container"></div>
+                <div class="choices-container" id="choices">
+                    <!-- Choices will be inserted here -->
+                </div>
+                <div id="feedback"></div>
+                <div class="controls">
+                    <button id="prev-btn" disabled>Previous</button>
+                    <button id="next-btn" disabled>Next Question</button>
+                </div>
+                <div class="controls" style="margin-top: 30px;">
+                    <button id="start-over-btn">Start Over</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // DOM Elements
+        const fileUpload = document.getElementById('file-upload');
+        const browseBtn = document.getElementById('browse-btn');
+        const dropZone = document.getElementById('drop-zone');
+        const fileList = document.getElementById('file-list');
+        const markdownInput = document.getElementById('markdown-input');
+        const parseBtn = document.getElementById('parse-btn');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const spinner = document.getElementById('spinner');
+        const questionCountEl = document.getElementById('question-count');
+        const categoriesListEl = document.getElementById('categories-list');
+        const categoryFiltersEl = document.getElementById('category-filters');
+        const quizContainer = document.getElementById('quiz-container');
+        const quizSetup = document.getElementById('quiz-setup');
+        const inputSection = document.getElementById('input-section');
+        
+        // Quiz Elements
+        const questionText = document.getElementById("question-text");
+        const imageContainer = document.getElementById("image-container");
+        const codeContainer = document.getElementById("code-container");
+        const choicesContainer = document.getElementById("choices");
+        const feedback = document.getElementById("feedback");
+        const nextBtn = document.getElementById("next-btn");
+        const prevBtn = document.getElementById("prev-btn");
+        const currentQuestionSpan = document.getElementById("current-question");
+        const totalQuestionsSpan = document.getElementById("total-questions");
+        const categoryIndicator = document.getElementById("category-indicator");
+        const startOverBtn = document.getElementById("start-over-btn");
+        
+        // Store uploaded files
+        const uploadedFiles = {
+            markdown: null,
+            images: {}
+        };
+        
+        // Remove sample loaders and sample data
+        
+        // Quiz state variables
+        let extractedQuestions = [];
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let categories = [];
+        let selectedCategory = 'all';
+        
+        // Handle file upload via button
+        browseBtn.addEventListener('click', function() {
+            fileUpload.click();
+        });
+        
+        // Handle selected files
+        fileUpload.addEventListener('change', function(e) {
+            handleFiles(e.target.files);
+        });
+        
+        // Handle drag and drop
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropZone.classList.add('highlight');
+        });
+        
+        dropZone.addEventListener('dragleave', function() {
+            dropZone.classList.remove('highlight');
+        });
+        
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('highlight');
+            
+            let files = [];
+            if (e.dataTransfer.items) {
+                for (let i = 0; i < e.dataTransfer.items.length; i++) {
+                    if (e.dataTransfer.items[i].kind === 'file') {
+                        files.push(e.dataTransfer.items[i].getAsFile());
+                    }
+                }
+            } else {
+                files = e.dataTransfer.files;
+            }
+            
+            handleFiles(files);
+        });
+        
+        // Process uploaded files
+        function handleFiles(files) {
+            // Clear previous files
+            fileList.innerHTML = '';
+            uploadedFiles.markdown = null;
+            uploadedFiles.images = {};
+            
+            // Process each file
+            Array.from(files).forEach(file => {
+                const fileName = file.name;
+                const fileExtension = fileName.split('.').pop().toLowerCase();
+                
+                // Create list item for file
+                const li = document.createElement('li');
+                const fileIcon = document.createElement('span');
+                fileIcon.className = 'file-icon';
+                
+                // Process by file type
+                if (fileExtension === 'md') {
+                    fileIcon.textContent = '📄';
+                    fileIcon.className += ' md-file';
+                    uploadedFiles.markdown = file;
+                    
+                    // Read markdown content
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        markdownInput.value = e.target.result;
+                    };
+                    reader.readAsText(file);
+                } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension)) {
+                    fileIcon.textContent = '🖼️';
+                    fileIcon.className += ' image-file';
+                    
+                    // Store image file for later use
+                    uploadedFiles.images[fileName] = file;
+                    
+                    // Process image file to get URL
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        uploadedFiles.images[fileName].url = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+                
+                // Build file list item
+                li.appendChild(fileIcon);
+                li.appendChild(document.createTextNode(' ' + fileName));
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '✕';
+                deleteBtn.addEventListener('click', function() {
+                    if (fileExtension === 'md') {
+                        uploadedFiles.markdown = null;
+                        markdownInput.value = '';
+                    } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension)) {
+                        delete uploadedFiles.images[fileName];
+                    }
+                    li.remove();
+                });
+                
+                li.appendChild(deleteBtn);
+                fileList.appendChild(li);
+            });
+        }
+        
+        // Parse markdown button click handler
+        parseBtn.addEventListener('click', parseMarkdown);
+        
+        // Parse the markdown to extract questions
+        function parseMarkdown() {
+            spinner.style.display = 'block';
+            
+            // Clear previous data
+            extractedQuestions = [];
+            categories = [];
+            
+            setTimeout(() => {
+                const markdown = markdownInput.value;
+                const questions = extractQuestionsFromMarkdown(markdown);
+                
+                extractedQuestions = questions;
+                
+                // Count questions
+                questionCountEl.textContent = questions.length;
+                
+                // Extract unique categories
+                categories = [];
+                const categoryMap = {};
+                
+                questions.forEach(q => {
+                    if (!categoryMap[q.category]) {
+                        categoryMap[q.category] = true;
+                        categories.push(q.category);
+                    }
+                });
+                
+                // Sort categories alphabetically
+                categories.sort();
+                
+                // Add "All Categories" at the beginning
+                categories.unshift('all');
+                
+                // Display categories
+                categoriesListEl.innerHTML = '';
+                Object.keys(categoryMap).forEach(cat => {
+                    const catCount = questions.filter(q => q.category === cat).length;
+                    const li = document.createElement('li');
+                    li.textContent = `${cat}: ${catCount} questions`;
+                    categoriesListEl.appendChild(li);
+                });
+                
+                // Generate category filter buttons
+                categoryFiltersEl.innerHTML = '';
+                
+                // Add category selection header
+                const header = document.createElement('h3');
+                header.textContent = 'Select Categories:';
+                header.style.width = '100%';
+                header.style.margin = '5px 0';
+                categoryFiltersEl.appendChild(header);
+                
+                // Create filter buttons for each category
+                categories.forEach(cat => {
+                    const button = document.createElement('button');
+                    button.className = 'filter-btn' + (cat === 'all' ? ' active' : '');
+                    button.textContent = cat === 'all' ? 'All Categories' : cat;
+                    button.dataset.category = cat;
+                    
+                    button.addEventListener('click', () => {
+                        if (cat === 'all') {
+                            // When "All Categories" is clicked, deselect other categories
+                            document.querySelectorAll('.filter-btn').forEach(btn => {
+                                btn.classList.remove('active');
+                                if (btn.dataset.category === 'all') {
+                                    btn.classList.add('active');
+                                }
+                            });
+                        } else {
+                            // Deselect "All Categories" when a specific category is clicked
+                            document.querySelector('.filter-btn[data-category="all"]').classList.remove('active');
+                            
+                            // Toggle this category
+                            button.classList.toggle('active');
+                            
+                            // If no categories are selected, select "All Categories" again
+                            if (!document.querySelector('.filter-btn.active')) {
+                                document.querySelector('.filter-btn[data-category="all"]').classList.add('active');
+                            }
+                        }
+                    });
+                    
+                    categoryFiltersEl.appendChild(button);
+                });
+                
+                // Enable start quiz button
+                startQuizBtn.disabled = questions.length === 0;
+                
+                spinner.style.display = 'none';
+            }, 100);
+        }
+        
+        // Extract questions, choices, and correct answers from markdown
+        function extractQuestionsFromMarkdown(markdown) {
+            // First separate the markdown into top-level sections by headers
+            const topLevelSections = markdown.split(/^# /m).filter(section => section.trim());
+            const questions = [];
+            
+            // Process each top-level section
+            topLevelSections.forEach((section) => {
+                // Get the category name (first line of the section)
+                let categoryLines = section.split('\n');
+                let mainCategory = categoryLines[0] ? categoryLines[0].trim() : 'Uncategorized';
+                
+                // Look for question blocks within the section
+                const questionBlockRegex = /\*\*([^*]+)\*\*([\s\S]*?)(?=\n\s*\*\*|$)/g;
+                let questionMatch;
+                
+                // Find all question blocks in this section
+                while ((questionMatch = questionBlockRegex.exec(section)) !== null) {
+                    let questionText = questionMatch[1].trim();
+                    let choicesBlock = questionMatch[2].trim();
+                    
+                    // Process images in question text
+                    const imageRegex = /!\[.*?\]\(([^)]+)\)/g;
+                    const images = [];
+                    let imgMatch;
+                    
+                    while ((imgMatch = imageRegex.exec(questionText)) !== null) {
+                        images.push(extractImage(imgMatch[1]));
+                    }
+                    
+                    // Remove image references from question text
+                    questionText = questionText.replace(/!\[.*?\]\([^)]+\)/g, '').trim();
+                    
+                    // Find images in choices block
+                    while ((imgMatch = imageRegex.exec(choicesBlock)) !== null) {
+                        images.push(extractImage(imgMatch[1]));
+                    }
+                    
+                    // Process code blocks
+                    const codeBlockRegex = /```(?:\w+)?\n([\s\S]*?)```/g;
+                    let code = null;
+                    let codeMatch;
+                    
+                    if ((codeMatch = codeBlockRegex.exec(choicesBlock)) !== null) {
+                        code = codeMatch[1].trim();
+                        choicesBlock = choicesBlock.replace(codeBlockRegex, '');
+                    }
+
+                    // IMPROVED CHOICE EXTRACTION: First get the entire text of all choice options
+                    // Parse the choices block line by line to properly identify bullet points
+                    const choiceLines = choicesBlock.split('\n');
+                    
+                    // Collect each complete choice with any multi-line text
+                    const rawChoices = [];
+                    let currentChoice = '';
+                    let inChoice = false;
+                    
+                    for (let i = 0; i < choiceLines.length; i++) {
+                        const line = choiceLines[i].trim();
+                        
+                        // Check if this line starts a new choice
+                        if (line.match(/^[-*] /)) {
+                            // If we were already building a choice, save it
+                            if (inChoice && currentChoice) {
+                                rawChoices.push(currentChoice);
+                            }
+                            
+                            // Start a new choice
+                            currentChoice = line.substring(2);
+                            inChoice = true;
+                        } else if (inChoice && line) {
+                            // Continue building the current choice
+                            currentChoice += ' ' + line;
+                        }
+                    }
+                    
+                    // Add the last choice if there is one
+                    if (inChoice && currentChoice) {
+                        rawChoices.push(currentChoice);
+                    }
+
+                    // Now parse each raw choice to find the correct answer and clean up formatting
+                    const choices = [];
+                    let correctAnswer = null;
+                    
+                    // Keep track of the original raw choices for debugging
+                    console.log("Raw choices:", rawChoices);
+                    
+                    rawChoices.forEach((choice, index) => {
+                        // Store the original choice for debugging
+                        const originalChoice = choice;
+                        
+                        // Check for various markers of correct answers
+                        const hasCheckmark = choice.includes('✅');
+                        const hasBold = choice.includes('**');
+                        const explicitlyMarkedCorrect = choice.match(/correct/i) && !choice.match(/incorrect/i);
+
+                        // Clean the choice text (remove markers)
+                        choice = choice.replace(/✅/g, '').trim();
+                        
+                        // Handle bold text - support various formats
+                        // Case 1: Entire option is bold: **Option text**
+                        // Case 2: Bold marker within text: Some **bold** text
+                        choice = choice.replace(/\*\*/g, '').trim();
+                        
+                        // Add cleaned choice to the array
+                        choices.push(choice);
+                        
+                        // Determine if this is the correct answer
+                        if (hasCheckmark || explicitlyMarkedCorrect) {
+                            correctAnswer = index;
+                            console.log(`Identified correct answer (${index}): ${originalChoice} -> ${choice}`);
+                        } else if (hasBold && correctAnswer === null) {
+                            // Only use bold as indicator if no checkmark has been found yet
+                            correctAnswer = index;
+                            console.log(`Identified correct answer by bold (${index}): ${originalChoice} -> ${choice}`);
+                        }
+                    });
+                    
+                    // Fallback to first option if no correct answer identified
+                    if (correctAnswer === null) {
+                        correctAnswer = 0;
+                        console.warn(`No correct answer marker found. Using first option as default for: ${questionText}`);
+                    }
+                    
+                    // Log the final choice selection for verification
+                    console.log(`Question: ${questionText}`);
+                    console.log(`Selected answer index ${correctAnswer}: ${choices[correctAnswer]}`);
+                    
+                    // Check if we have valid question with choices
+                    if (questionText && choices.length > 0) {
+                        // Find the subheading/category context
+                        const questionContext = section.substring(0, questionMatch.index).trim();
+                        let subCategory = null;
+                        
+                        // Try to find a subheading
+                        const subheadingMatch = questionContext.match(/##\s+([^#\n]+)(?!.*##)/);
+                        if (subheadingMatch) {
+                            subCategory = subheadingMatch[1].trim();
+                        }
+                        
+                        // Create question object
+                        questions.push({
+                            question: questionText,
+                            choices: choices,
+                            correctAnswer: correctAnswer,
+                            category: (subCategory || mainCategory || 'Uncategorized'),
+                            image: images.length > 0 ? images : null,
+                            code: code,
+                            originalChoices: rawChoices // Keep for debugging
+                        });
+                    }
+                }
+            });
+            
+            return questions;
+        }
+
+        // Process image reference to get URL
+        function extractImage(imageName) {
+            // Clean up the image name - remove encoding like %20
+            const cleanedImageName = decodeURIComponent(imageName);
+            
+            // Check if we have this image in our uploaded files
+            const exactMatch = uploadedFiles.images[cleanedImageName];
+            if (exactMatch && exactMatch.url) {
+                return exactMatch.url;
+            }
+            
+            // If not exact match, try to match by the file name without path
+            const fileName = cleanedImageName.split('/').pop();
+            for (const [key, imageFile] of Object.entries(uploadedFiles.images)) {
+                if (key.endsWith(fileName) && imageFile.url) {
+                    return imageFile.url;
+                }
+            }
+            
+            // If not found in uploads, return the original name (might be a remote URL)
+            return imageName;
+        }
+        
+        // Start the quiz
+        startQuizBtn.addEventListener('click', startQuiz);
+        
+        function startQuiz() {
+            // Get selected categories
+            const selectedCategoryButtons = document.querySelectorAll('.filter-btn.active');
+            const selectedCategories = Array.from(selectedCategoryButtons).map(btn => btn.dataset.category);
+            
+            // Filter questions by selected categories
+            if (selectedCategories.includes('all')) {
+                currentQuestions = extractedQuestions;
+            } else {
+                currentQuestions = extractedQuestions.filter(q => selectedCategories.includes(q.category));
+            }
+            
+            // Shuffle the questions
+            shuffleArray(currentQuestions);
+            
+            // Update UI
+            totalQuestionsSpan.textContent = currentQuestions.length;
+            currentQuestionIndex = 0;
+            
+            // Show quiz container and hide setup
+            quizContainer.style.display = 'block';
+            quizSetup.style.display = 'none';
+            inputSection.style.display = 'none';
+            
+            // Show first question
+            showQuestion(0);
+            updateNavButtons();
+        }
+        
+        // Shuffle array (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) { // Changed i++ to i--
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // Display current question
+        function showQuestion(index) {
+            if (currentQuestions.length === 0) return;
+            
+            const question = currentQuestions[index];
+            questionText.innerHTML = question.question;
+            
+            // Clear previous content
+            imageContainer.innerHTML = "";
+            codeContainer.innerHTML = "";
+            choicesContainer.innerHTML = "";
+            feedback.innerHTML = "";
+            feedback.className = "";
+            
+            // Display category
+            categoryIndicator.textContent = `Category: ${question.category}`;
+            
+            // Display images if any
+            if (question.image) {
+                if (Array.isArray(question.image)) {
+                    question.image.forEach(img => {
+                        const imgElement = document.createElement("img");
+                        imgElement.src = img; // Works for both URLs and data URLs
+                        imgElement.alt = "Question image";
+                        imageContainer.appendChild(imgElement);
+                    });
+                } else {
+                    const imgElement = document.createElement("img");
+                    imgElement.src = question.image;
+                    imgElement.alt = "Question image";
+                    imageContainer.appendChild(imgElement);
+                }
+            }
+            
+            // Display code if any
+            if (question.code) {
+                const pre = document.createElement("pre");
+                const code = document.createElement("code");
+                code.textContent = question.code;
+                pre.appendChild(code);
+                codeContainer.appendChild(pre);
+            }
+            
+            // Create shuffled choices array with original indices
+            const shuffledChoices = question.choices.map((choice, index) => ({
+                text: choice,
+                originalIndex: index
+            }));
+            
+            // Shuffle the choices
+            shuffleArray(shuffledChoices);
+            
+            // Store the shuffled choices and correct answer mapping
+            questionText.dataset.correctAnswerIndex = question.correctAnswer;
+            
+            // Create answer choices
+            shuffledChoices.forEach((choice, choiceIndex) => {
+                const button = document.createElement("button");
+                button.className = "choice-btn";
+                button.innerHTML = choice.text;
+                button.dataset.index = choiceIndex;
+                button.dataset.originalIndex = choice.originalIndex;
+                
+                button.addEventListener("click", () => {
+                    selectAnswer(button);
+                });
+                
+                choicesContainer.appendChild(button);
+            });
+            
+            // Update question counter
+            currentQuestionSpan.textContent = index + 1;
+        }
+        
+        // Handle answer selection - modified to work with shuffled choices
+        function selectAnswer(selectedButton) {
+            const question = currentQuestions[currentQuestionIndex];
+            const correctAnswerIndex = parseInt(questionText.dataset.correctAnswerIndex);
+            const allChoiceButtons = document.querySelectorAll(".choice-btn");
+            
+            // Reset all buttons
+            allChoiceButtons.forEach(btn => {
+                btn.classList.remove("selected", "correct", "incorrect");
+            });
+            
+            selectedButton.classList.add("selected");
+            
+            // Check if answer is correct by comparing original indices
+            const selectedOriginalIndex = parseInt(selectedButton.dataset.originalIndex);
+            
+            if (selectedOriginalIndex === correctAnswerIndex) {
+                feedback.innerHTML = "Correct! Well done!";
+                feedback.className = "correct";
+                selectedButton.classList.add("correct");
+            } else {
+                // Show detailed feedback
+                const correctChoice = question.choices[correctAnswerIndex];
+                feedback.innerHTML = `Incorrect. The correct answer is: "${correctChoice}"`;
+                feedback.className = "incorrect";
+                selectedButton.classList.add("incorrect");
+                
+                // Highlight correct answer
+                allChoiceButtons.forEach(btn => {
+                    if (parseInt(btn.dataset.originalIndex) === correctAnswerIndex) {
+                        btn.classList.add("correct");
+                    }
+                });
+                
+                // Log debug info
+                console.log("Question with issue:", question);
+            }
+            
+            // Enable next button
+            nextBtn.disabled = false;
+        }
+        
+        // Navigate to next question
+        function nextQuestion() {
+            if (currentQuestionIndex < currentQuestions.length - 1) {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+                updateNavButtons();
+                nextBtn.disabled = true;
+            }
+        }
+        
+        // Navigate to previous question
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                showQuestion(currentQuestionIndex);
+                updateNavButtons();
+                nextBtn.disabled = false;
+            }
+        }
+        
+        // Update navigation buttons state
+        function updateNavButtons() {
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.disabled = true; // Will be enabled after selecting an answer
+        }
+        
+        // Start over - go back to input page
+        function startOver() {
+            quizContainer.style.display = 'none';
+            quizSetup.style.display = 'block';
+            inputSection.style.display = 'block';
+        }
+        
+        // Add event listeners for navigation buttons
+        nextBtn.addEventListener("click", nextQuestion);
+        prevBtn.addEventListener("click", prevQuestion);
+        startOverBtn.addEventListener("click", startOver);
+    </script>
+</body>
+</html>
