@@ -64,6 +64,7 @@ The basic format consists of:
 - Answer choices starting with hyphens (-)
 - Correct answer marked with **bold** and ✅
 - One blank line between questions
+- If Question has image, image must placed between question and answer options
 
 Example with code:
 ```markdown
