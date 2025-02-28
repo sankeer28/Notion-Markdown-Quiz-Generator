@@ -1,0 +1,345 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.container {
+    display: flex;
+    gap: 20px;
+}
+
+.left-panel {
+    flex: 1;
+    padding-right: 20px;
+    border-right: 1px solid #ddd;
+}
+
+.right-panel {
+    flex: 2;
+}
+
+#markdown-input {
+    width: 100%;
+    height: 300px;
+    padding: 10px;
+    margin-bottom: 20px;
+    font-family: monospace;
+}
+
+#file-upload {
+    display: none;
+}
+
+#parse-btn, #start-quiz-btn {
+    padding: 10px 15px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+#parse-btn:disabled, #start-quiz-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#stats {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+#quiz-container {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: none;
+}
+
+#question-text {
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+#image-container img {
+    max-width: 100%;
+    margin: 15px 0;
+    border: 1px solid #ddd;
+}
+
+.choices-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.choice-btn {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    background-color: white;
+    color: black;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.2s;
+}
+
+.choice-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.choice-btn.selected {
+    background-color: #4285f4;
+    color: white;
+}
+
+.choice-btn.correct {
+    background-color: #34a853;
+    color: white;
+}
+
+.choice-btn.incorrect {
+    background-color: #ea4335;
+    color: white;
+}
+
+#feedback {
+    font-weight: bold;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+#feedback.correct {
+    background-color: rgba(52, 168, 83, 0.2);
+    color: #34a853;
+}
+
+#feedback.incorrect {
+    background-color: rgba(234, 67, 53, 0.2);
+    color: #ea4335;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #f1f1f1;
+    border-radius: 15px;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+#progress {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+pre {
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+code {
+    font-family: 'Courier New', monospace;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: #4285f4;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+    display: none;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.category-filter {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.filter-btn {
+    padding: 5px 10px;
+    background-color: #f1f1f1;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 5px;
+    margin-right: 5px;
+    position: relative;
+    padding-left: 30px; /* Space for checkbox */
+}
+
+.filter-btn::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 1px solid #999;
+    background-color: white;
+    border-radius: 3px;
+}
+
+.filter-btn.active {
+    background-color: #4285f4;
+    color: white;
+}
+
+.filter-btn.active::before {
+    content: "✓";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: white;
+    background-color: #4285f4;
+    border-color: #4285f4;
+}
+
+#start-over-btn {
+    background-color: #f44336;
+}
+
+.sample-btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.upload-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 2px dashed #ccc;
+    border-radius: 5px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.upload-section.highlight {
+    border-color: #4285f4;
+    background-color: rgba(66, 133, 244, 0.1);
+}
+
+#file-list {
+    margin: 15px 0;
+    padding: 0;
+    list-style-type: none;
+    text-align: left;
+}
+
+#file-list li {
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.file-icon {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.md-file {
+    color: #4285f4;
+}
+
+.image-file {
+    color: #34a853;
+}
+
+.delete-btn {
+    margin-left: auto;
+    padding: 2px 5px;
+    background-color: #ea4335;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* Quiz Summary Styles */
+#quiz-summary {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#summary-stats {
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.wrong-answer-item {
+    background-color: rgba(234, 67, 53, 0.1);
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border-left: 4px solid #ea4335;
+}
+
+.wrong-question-text {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.correct-answer-text {
+    color: #34a853;
+    margin-bottom: 5px;
+}
+
+.your-answer-text {
+    color: #ea4335;
+    margin-bottom: 5px;
+}
