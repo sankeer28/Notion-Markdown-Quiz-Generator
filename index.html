@@ -52,6 +52,9 @@ Example format:
             </div>
             
             <div id="quiz-container">
+                <div class="progress-container">
+                    <div id="progress-bar"></div>
+                </div>
                 <div id="progress">Question <span id="current-question">1</span> of <span id="total-questions">0</span></div>
                 <div id="category-indicator" class="category-badge">Category: Unknown</div>
                 <div id="question-text">Loading question...</div>
@@ -62,8 +65,8 @@ Example format:
                 </div>
                 <div id="feedback"></div>
                 <div class="controls">
-                    <button id="prev-btn" disabled>Previous</button>
-                    <button id="next-btn" disabled>Next Question</button>
+                    <button id="prev-btn" class="nav-btn" disabled>Previous</button>
+                    <button id="next-btn" class="nav-btn" disabled>Next Question</button>
                 </div>
                 <div class="controls" style="margin-top: 30px;">
                     <button id="start-over-btn">Start Over</button>

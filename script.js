@@ -13,6 +13,7 @@ const categoryFiltersEl = document.getElementById('category-filters');
 const quizContainer = document.getElementById('quiz-container');
 const quizSetup = document.getElementById('quiz-setup');
 const inputSection = document.getElementById('input-section');
+const progressBar = document.getElementById('progress-bar');
 
 // Quiz Elements
 const questionText = document.getElementById("question-text");
@@ -451,6 +452,9 @@ function startQuiz() {
     // Reset user answers
     userAnswers = Array(currentQuestions.length).fill(null);
     
+    // Reset progress bar
+    progressBar.style.width = '0%';
+    
     // Show first question
     showQuestion(0);
     updateNavButtons();
@@ -480,6 +484,10 @@ function showQuestion(index) {
     
     // Display category
     categoryIndicator.textContent = `Category: ${question.category}`;
+    
+    // Update progress bar
+    const progressPercentage = ((index + 1) / currentQuestions.length) * 100;
+    progressBar.style.width = `${progressPercentage}%`;
     
     // Display images if any
     if (question.image) {
@@ -705,4 +713,39 @@ restartQuizBtn.addEventListener("click", function() {
 returnSetupBtn.addEventListener("click", function() {
     // Call the startOver function directly
     startOver();
+});
+
+// Add swipe gesture support for mobile
+document.addEventListener('DOMContentLoaded', function() {
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    const quizContainerEl = document.getElementById('quiz-container');
+    
+    quizContainerEl.addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    
+    quizContainerEl.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, false);
+    
+    function handleSwipe() {
+        const swipeThreshold = 100; // minimum distance for swipe
+        
+        if (touchEndX < touchStartX - swipeThreshold) {
+            // Swiped left - go to next question
+            if (!nextBtn.disabled) {
+                nextQuestion();
+            }
+        }
+        
+        if (touchEndX > touchStartX + swipeThreshold) {
+            // Swiped right - go to previous question
+            if (!prevBtn.disabled) {
+                prevQuestion();
+            }
+        }
+    }
 });
