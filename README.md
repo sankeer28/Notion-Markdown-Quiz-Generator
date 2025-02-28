@@ -47,8 +47,8 @@ A browser-based tool that converts Notion markdown exports into interactive quiz
 
 ## Markdown Format Requirements
 
-For the tool to properly detect questions, format your Notion export as follows:
-
+For the tool to properly detect questions, format your Notion export exactly as follows:
+### Question will not be formatted properly if there is a "*" in the question
 ### Basic Question Format
 
 ```markdown
