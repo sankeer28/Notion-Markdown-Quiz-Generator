@@ -20,7 +20,7 @@ A browser-based tool that converts Notion markdown exports into interactive quiz
 ### Step 1: Import Your Notion Export
 
 1. Open the Notion Quiz Generator
-2. Drag and drop your exported `.md` files and images onto the drop zone
+2. Drag and drop your exported `.md` files and images onto the drop zone or the entire zip file
    - Or click "Browse Files" to select them manually
 3. The markdown content will automatically load in the text area
    - You can also paste markdown directly into the text area
