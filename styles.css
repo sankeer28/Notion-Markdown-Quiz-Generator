@@ -410,6 +410,30 @@ code {
     color: var(--success-color);
 }
 
+.zip-file {
+    color: #8b5cf6; /* purple color for zip files */
+}
+
+.error-file {
+    color: var(--error-color);
+}
+
+.upload-hint {
+    font-size: 0.85rem;
+    color: var(--light-text);
+    margin-top: 0.5rem;
+}
+
+.loading-item {
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
 .delete-btn {
     margin-left: auto;
     padding: 0.25rem 0.5rem;

@@ -87,68 +87,120 @@ dropZone.addEventListener('drop', function(e) {
 
 // Process uploaded files
 function handleFiles(files) {
-    // Clear previous files
-    fileList.innerHTML = '';
-    uploadedFiles.markdown = null;
-    uploadedFiles.images = {};
-    
-    // Process each file
     Array.from(files).forEach(file => {
         const fileName = file.name;
         const fileExtension = fileName.split('.').pop().toLowerCase();
         
-        // Create list item for file
-        const li = document.createElement('li');
-        const fileIcon = document.createElement('span');
-        fileIcon.className = 'file-icon';
-        
-        // Process by file type
-        if (fileExtension === 'md') {
-            fileIcon.textContent = '📄';
-            fileIcon.className += ' md-file';
-            uploadedFiles.markdown = file;
-            
-            // Read markdown content
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                markdownInput.value = e.target.result;
-            };
-            reader.readAsText(file);
-        } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension)) {
-            fileIcon.textContent = '🖼️';
-            fileIcon.className += ' image-file';
-            
-            // Store image file for later use
-            uploadedFiles.images[fileName] = file;
-            
-            // Process image file to get URL
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                uploadedFiles.images[fileName].url = e.target.result;
-            };
-            reader.readAsDataURL(file);
+        // Handle zip files
+        if (fileExtension === 'zip') {
+            processZipFile(file);
+            return;
         }
         
-        // Build file list item
-        li.appendChild(fileIcon);
-        li.appendChild(document.createTextNode(' ' + fileName));
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.textContent = '✕';
-        deleteBtn.addEventListener('click', function() {
-            if (fileExtension === 'md') {
-                uploadedFiles.markdown = null;
-                markdownInput.value = '';
-            } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension)) {
-                delete uploadedFiles.images[fileName];
-            }
-            li.remove();
-        });
-        
-        li.appendChild(deleteBtn);
-        fileList.appendChild(li);
+        addFileToList(file);
     });
+}
+
+// Add a single file to the file list and process it
+function addFileToList(file) {
+    const fileName = file.name;
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    
+    // Create list item for file
+    const li = document.createElement('li');
+    const fileIcon = document.createElement('span');
+    fileIcon.className = 'file-icon';
+    
+    // Process by file type
+    if (fileExtension === 'md') {
+        fileIcon.textContent = '📄';
+        fileIcon.className += ' md-file';
+        uploadedFiles.markdown = file;
+        
+        // Read markdown content
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            markdownInput.value = e.target.result;
+        };
+        reader.readAsText(file);
+    } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension)) {
+        fileIcon.textContent = '🖼️';
+        fileIcon.className += ' image-file';
+        
+        // Store image file for later use
+        uploadedFiles.images[fileName] = file;
+        
+        // Process image file to get URL
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            uploadedFiles.images[fileName].url = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // Build file list item
+    li.appendChild(fileIcon);
+    li.appendChild(document.createTextNode(' ' + fileName));
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '✕';
+    deleteBtn.addEventListener('click', function() {
+        if (fileExtension === 'md') {
+            uploadedFiles.markdown = null;
+            markdownInput.value = '';
+        } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension)) {
+            delete uploadedFiles.images[fileName];
+        }
+        li.remove();
+    });
+    
+    li.appendChild(deleteBtn);
+    fileList.appendChild(li);
+}
+
+// Process zip file
+function processZipFile(zipFile) {
+    const zip = new JSZip();
+    
+    // Create loading indicator
+    const loadingItem = document.createElement('li');
+    loadingItem.innerHTML = '<span class="file-icon zip-file">🗜️</span> Extracting ' + zipFile.name + '...';
+    loadingItem.className = 'loading-item';
+    fileList.appendChild(loadingItem);
+    
+    // Read the zip file
+    zip.loadAsync(zipFile)
+        .then(function(zip) {
+            // Process each file in the zip
+            const promises = [];
+            
+            zip.forEach(function(relativePath, zipEntry) {
+                if (!zipEntry.dir) {
+                    const fileExtension = relativePath.split('.').pop().toLowerCase();
+                    
+                    // Process only markdown and image files
+                    if (fileExtension === 'md' || ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension)) {
+                        const promise = zipEntry.async('blob').then(function(blob) {
+                            // Create a File object from the blob
+                            const file = new File([blob], relativePath.split('/').pop(), { type: blob.type });
+                            addFileToList(file);
+                        });
+                        promises.push(promise);
+                    }
+                }
+            });
+            
+            return Promise.all(promises);
+        })
+        .then(function() {
+            // Remove loading indicator after all files are processed
+            loadingItem.remove();
+        })
+        .catch(function(error) {
+            console.error('Error extracting zip:', error);
+            loadingItem.innerHTML = '<span class="file-icon error-file">❌</span> Error extracting ' + zipFile.name;
+        });
 }
 
 // Parse markdown button click handler
